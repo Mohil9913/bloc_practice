@@ -1,6 +1,9 @@
 import 'package:bloc_practice/bloc/counter_bloc.dart';
 import 'package:bloc_practice/bloc/counter_event.dart';
 import 'package:bloc_practice/bloc/counter_state.dart';
+import 'package:bloc_practice/visibility_bloc/visibility_bloc.dart';
+import 'package:bloc_practice/visibility_bloc/visibility_event.dart';
+import 'package:bloc_practice/visibility_bloc/visibility_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -19,10 +22,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: BlocProvider(
-        //by default false, when true creates instance only when method is called
-        lazy: true,
-        create: (context) => CounterBloc(),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (context) => CounterBloc()),
+          BlocProvider(create: (context) => VisibilityBloc()),
+        ],
         child: MyHomePage(),
       ),
     );
@@ -42,11 +46,18 @@ class MyHomePage extends StatelessWidget {
             const Text(
               'You have pushed the button this many times:',
             ),
-            BlocBuilder<CounterBloc, CounterState>(
+            BlocBuilder<VisibilityBloc, VisibilityState>(
               builder: (context, state) {
-                return Text(
-                  state.count.toString(),
-                  style: Theme.of(context).textTheme.headlineMedium,
+                return Visibility(
+                  visible: state.isVisible,
+                  child: BlocBuilder<CounterBloc, CounterState>(
+                    builder: (context, state) {
+                      return Text(
+                        state.count.toString(),
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -69,6 +80,20 @@ class MyHomePage extends StatelessWidget {
             },
             tooltip: 'Increment',
             child: const Icon(Icons.add),
+          ),
+          FloatingActionButton(
+            onPressed: () {
+              context.read<VisibilityBloc>().add(ShowEvent());
+            },
+            tooltip: 'Show',
+            child: const Icon(Icons.visibility),
+          ),
+          FloatingActionButton(
+            onPressed: () {
+              context.read<VisibilityBloc>().add(HideEvent());
+            },
+            tooltip: 'Hide',
+            child: const Icon(Icons.visibility_off),
           ),
         ],
       ),
